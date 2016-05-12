@@ -1,0 +1,28 @@
+version: '2'
+
+services:
+  go-server:
+    image: gocd/gocd-server
+    ports:
+      - 8153:8153 # Web
+      - 8154:8154 # Agents
+    environment:
+      - AGENT_KEY=F56CF627-F0B6-4016-8A2A-11350A77CBD1
+      - constraint:disk==persistent
+    volumes:
+      - /var/lib/containers/go-server/data:/var/lib/go-server
+      - /var/lib/containers/go-server/logs:/var/log/go-server
+
+  go-agent:
+    hostname: gocd-agent
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hbouvier/gocd-agent
+    environment:
+      - AGENT_KEY=F56CF627-F0B6-4016-8A2A-11350A77CBD1
+      - constraint:memory=2gb
+    links:
+      - go-server:go-server      
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
