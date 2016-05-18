@@ -1,0 +1,3 @@
+FROM gocd/gocd-server
+COPY ./post-run/ /opt/post-run
+CMD /opt/post-run/post-run && /sbin/my_init

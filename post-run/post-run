@@ -1,2 +1,12 @@
 #!/bin/sh
+if [ -r /var/run/docker.sock ] ; then
+	chmod 777 /var/run/docker.sock
+fi
+if [ -d /etc/go ] ; then 
+	chown -R go:go /etc/go
+fi
+if [ -d /var/lib/go-server ] ; then 
+	chown -R go:go /var/lib/go-server
+fi
+
 /opt/post-run/delay-start >/tmp/delay-start.log 2>&1 &

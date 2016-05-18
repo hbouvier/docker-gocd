@@ -1,26 +1,40 @@
 version: '2'
 
 services:
+  go-server-data:
+    image: busybox
+    command: /bin/sh -c 'mkdir -p /var/lib/go-server && chmod -R 777 /var/lib/go-server && while [ 1 ] ; do sleep 86400 ; done'
+    environment:
+      - constraint:node==aws-swarm-node-001
+    volumes:
+      - /var/lib/go-server
+      - /etc/go
+
   go-server:
     hostname: go-server
-    image: gocd/gocd-server
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    image: hbouvier/gocd-server
     ports:
       - 8153:8153 # Web
       - 8154:8154 # Agents
     environment:
       - AGENT_KEY=F56CF627-F0B6-4016-8A2A-11350A77CBD1
+      - constraint:node==aws-swarm-node-001
       - constraint:node!=~swarm-master*    # not on swarm master node
-      - constraint:memory==1MB
       - affinity:container!=~gocd-server*  # not with the gocd-server
       - affinity:container!=~gocd-agent*   # not with another gocd-agent
     networks:
       - continuous-integration
+    volumes_from:
+      - go-server-data
 
   go-agent:
     hostname: go-agent
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.agent
     image: hbouvier/gocd-agent
     environment:
       - AGENT_KEY=F56CF627-F0B6-4016-8A2A-11350A77CBD1
@@ -33,6 +47,7 @@ services:
       - continuous-integration
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock  # to allow docker-compose from within the container
+
 
 networks:
   continuous-integration:
